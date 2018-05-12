@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from regr.core import util
+from regress.core import util
 
 
 @pytest.mark.core

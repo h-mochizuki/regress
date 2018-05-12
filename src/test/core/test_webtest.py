@@ -1,5 +1,5 @@
-from regr.core.webtest import get, q, TestCase
-from regr.drivers import phantom
+from regress.core.webtest import get, q, TestCase
+from regress.drivers import phantom
 
 
 class WebTestCase(TestCase):
