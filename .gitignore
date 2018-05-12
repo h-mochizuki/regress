@@ -1,0 +1,35 @@
+# Ignore Project files
+## Python
+__pycache__/
+*.py[cod]
+*.egg-info
+
+## VirtualEnv
+venv/
+
+## AWS
+.elasticbeanstalk
+
+## log
+*.log
+
+## lock
+*.lock
+
+# Ignore IDE files
+## for Eclipse
+.buildpath
+.project
+.settings
+.pydevproject
+
+## for Intellij IDEA/RubyMine/PyCharm
+*.iml
+.idea
+.cache
+
+## for Visual Studio Code
+.vscode
+
+## for ctags
+.tags*
