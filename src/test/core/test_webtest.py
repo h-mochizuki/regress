@@ -3,7 +3,7 @@ from regress.drivers import phantom
 
 
 class WebTestCase(TestCase):
-    driver = phantom()
+    create_driver = (lambda self: phantom())
 
     def test_simple(self):
         """
@@ -13,14 +13,13 @@ class WebTestCase(TestCase):
         self.assertIn('google', self.driver.hostname)
         self.assertIn('Google', self.driver.title)
 
-        q("input[name='q']").send_keys("hoge")
+        q("input[name='q']").text = "hoge"
         self.assertNotIn('hoge', q("input[name='q']").text)
         q("input[name='q']").submit_and_wait()
         self.assertIn('hoge', self.driver.title)
 
-        q("input[name='q']").clear()
+        q("input[name='q']").text = "piyo"
         self.assertNotIn('hoge', q("input[name='q']").text)
-        q("input[name='q']").send_keys("piyo")
         q("input[name='q']").submit_and_wait()
         self.assertIn('piyo', self.driver.title)
         self.assertNotIn('hoge', self.driver.title)

@@ -1,6 +1,7 @@
 # Ignore Project files
 ## Python
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.egg-info
 
