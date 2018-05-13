@@ -3,7 +3,15 @@ from selenium.common.exceptions import WebDriverException
 
 from .core.util import driver_path
 
-__all__ = ('phantom', 'chrome', 'ie',)
+__all__ = ('remote', 'phantom', 'chrome', 'ie',)
+
+
+def remote(command_executor=None, capabilities=None):
+    _driver = webdriver.Remote(
+        command_executor=command_executor,
+        desired_capabilities=capabilities
+    )
+    return _driver
 
 
 def phantom():

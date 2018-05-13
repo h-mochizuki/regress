@@ -9,27 +9,35 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from . import util
 
-__all__ = ('wait_for_page_load', 'get', 'close', 'q', 'qs', 'TestCase')
+__all__ = ('wait_for_page_load', 'get', 'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
 
 
 @contextmanager
-def wait_for_page_load(driver: WebDriver, timeout: float = 30.0):
+def wait_for_page_load(
+        driver: WebDriver,
+        wait_seconds: float = 0.0,
+        timeout: float = 30.0,
+        apply: callable = lambda d: d.execute_script('return document.readyState') == 'complete'):
     """
     画面ロードが終わるまで内部処理を待機させます
     with句により内部処理を定義してください
     :param driver: WebDriverインスタンス
+    :param wait_seconds: 待機秒数
     :param timeout: タイムアウト秒数
+    :param apply: 待機終了条件
     """
+    self = util.get_caller(TestCase)
     yield driver
-    WebDriverWait(driver, timeout, ignored_exceptions=(WebDriverException,)).until(
-        lambda d: d.execute_script('return document.readyState') == 'complete'
-    )
+    # Ajax対応
+    sleep(wait_seconds if wait_seconds else self.wait_seconds if self and hasattr(self, 'wait_seconds') else 0)
+    WebDriverWait(driver, timeout, ignored_exceptions=(WebDriverException,)).until(apply)
 
 
-def get(url: str, timeout: float = 30.0) -> WebDriver:
+def get(url: str, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDriver:
     """
     呼び出し元のWebDriverを使用して対象URLを開きます
     :param url: 対象URL
+    :param wait_seconds: 待機秒数
     :param timeout: タイムアウト秒数
     :return: WebDriverインスタンス
     """
@@ -38,7 +46,7 @@ def get(url: str, timeout: float = 30.0) -> WebDriver:
         self.driver = self.create_driver()
 
     if self.driver and isinstance(self.driver, WebDriver):
-        with wait_for_page_load(self.driver, timeout):
+        with wait_for_page_load(self.driver, wait_seconds=wait_seconds, timeout=timeout):
             self.driver.get(url)
     return self.driver
 
@@ -72,6 +80,25 @@ def qs(css_selector: str) -> List[WebElement]:
     self = util.get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         return self.driver.find_elements_by_css_selector(css_selector)
+
+
+def sleep(seconds: float):
+    """
+    指定秒数待機します
+    :param seconds: 待機秒数
+    """
+    import time
+    time.sleep(seconds)
+
+
+@contextmanager
+def every_sleep(seconds: float):
+    """
+    指定秒数待機します
+    :param seconds: 待機秒数
+    """
+    yield
+    sleep(seconds)
 
 
 def _get_hostname(self: WebDriver) -> str:
@@ -137,6 +164,8 @@ class TestCase(unittest.TestCase):
     driver: WebDriver
     # WebDriverを作成するメソッド
     create_driver: callable
+    # 待機秒数(画面切り替えが間に合わない場合に指定)
+    wait_seconds: float = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -21,6 +21,7 @@ if "%env%"=="update" goto UPDATE
 if "%env%"=="lock" goto LOCK
 if "%env%"=="test" goto TEST
 if "%env%"=="local_test" goto LOCAL_TEST
+if "%env%"=="hub" goto HUB
 if "%env%"=="clean" goto CLEAN
 
 :USAGE
@@ -31,7 +32,8 @@ if "%env%"=="clean" goto CLEAN
     echo "    update:     Update dependencies."
     echo "    lock:       Lock dependencies."
     echo "    test:       Run tests on docker container."
-    echo "    local_test:  Run tests on local."
+    echo "    local_test: Run tests on local."
+    echo "    hub:        Start docker selenium-hub."
     echo "    clean:      Clean docker container and images."
     goto EOF
 
@@ -55,6 +57,11 @@ if "%env%"=="clean" goto CLEAN
     pip install --no-cache-dir -r requirements.txt
     pip install --no-cache-dir -r requirements_dev.txt
     python src\setup.py test
+    goto EOF
+
+:HUB
+    set COMPOSE_CONVERT_WINDOWS_PATHS=1
+    docker-compose up && docker-compose down && docker system prune -f
     goto EOF
 
 :CLEAN
