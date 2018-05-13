@@ -17,20 +17,37 @@ def wait_for_page_load(
         driver: WebDriver,
         wait_seconds: float = 0.0,
         timeout: float = 30.0,
-        apply: callable = lambda d: d.execute_script('return document.readyState') == 'complete'):
+        method: callable = lambda d: d.execute_script('return document.readyState') == 'complete'):
     """
     画面ロードが終わるまで内部処理を待機させます
     with句により内部処理を定義してください
     :param driver: WebDriverインスタンス
     :param wait_seconds: 待機秒数
     :param timeout: タイムアウト秒数
-    :param apply: 待機終了条件
+    :param method: 待機終了条件
     """
     self = util.get_caller(TestCase)
     yield driver
     # Ajax対応
-    sleep(wait_seconds if wait_seconds else self.wait_seconds if self and hasattr(self, 'wait_seconds') else 0)
-    WebDriverWait(driver, timeout, ignored_exceptions=(WebDriverException,)).until(apply)
+    driver_wait_seconds = self.wait_seconds if self and hasattr(self, 'wait_seconds') else 0
+    sleep(wait_seconds if wait_seconds else driver_wait_seconds)
+    wait(method, timeout=timeout)
+
+
+def wait(method, message: str = '', *, timeout: float = 30.0) -> None:
+    """
+    指定条件が満たされるまで待機します
+    :param method:
+    :param message:
+    :param timeout: タイムアウト秒数
+    """
+    self = util.get_caller(TestCase)
+    if self.driver and isinstance(self.driver, WebDriver):
+        WebDriverWait(
+            self.driver,
+            timeout,
+            ignored_exceptions=(WebDriverException,)
+        ).until(method, message)
 
 
 def get(url: str, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDriver:
@@ -56,7 +73,7 @@ def close() -> None:
     WebDriverを閉じます
     """
     self = util.get_caller(TestCase)
-    if hasattr(self, 'driver'):
+    if self.driver and isinstance(self.driver, WebDriver):
         self.driver.quit()
 
 
@@ -113,7 +130,8 @@ def _get_hostname(self: WebDriver) -> str:
 
 def _and_wait(self, name: str):
     """
-    '_and_wait' で終わるメソッドが呼ばれた後に画面がロード完了するまで待機するようにします
+    '_and_wait' で終わるメソッド実行後に画面ロード完了まで待機します
+    Ajaxによる画面操作では画面ロードが発生しないため注意してください
     :param self: 対象オブジェクト
     :param name: メソッド名
     :return: 対象メソッド
@@ -171,7 +189,9 @@ class TestCase(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         if not hasattr(self, 'create_driver') and not hasattr(self, 'driver'):
-            raise NotImplementedError("Subclasses of BaseTestCase must provide create_driver or driver property.")
+            raise NotImplementedError(
+                "Subclasses of BaseTestCase must provide create_driver or driver property."
+            )
 
         if hasattr(self, 'driver') and self.driver:
             self._override_driver_quit(self.driver)
