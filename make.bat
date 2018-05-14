@@ -20,9 +20,10 @@ if "%2"=="" (
 if "%env%"=="update" goto UPDATE
 if "%env%"=="lock" goto LOCK
 if "%env%"=="test" goto TEST
-if "%env%"=="local_test" goto LOCAL_TEST
+if "%env%"=="local" goto LOCAL
 if "%env%"=="hub" goto HUB
 if "%env%"=="clean" goto CLEAN
+if "%env%"=="build" goto BUILD
 
 :USAGE
     echo "USAGE"
@@ -32,9 +33,10 @@ if "%env%"=="clean" goto CLEAN
     echo "    update:     Update dependencies."
     echo "    lock:       Lock dependencies."
     echo "    test:       Run tests on docker container."
-    echo "    local_test: Run tests on local."
+    echo "    local:      Run tests on local."
     echo "    hub:        Start docker selenium-hub."
     echo "    clean:      Clean docker container and images."
+    echo "    build:      Build project."
     goto EOF
 
 :UPDATE
@@ -53,10 +55,10 @@ if "%env%"=="clean" goto CLEAN
     docker run --rm -it -p 5000:5000 %name%:%tag% python -m flake8 --max-line-length=100
     goto EOF
 
-:LOCAL_TEST
+:LOCAL
     pip install --no-cache-dir -r requirements.txt
     pip install --no-cache-dir -r requirements_dev.txt
-    python src\setup.py test
+    python setup.py test
     goto EOF
 
 :HUB
@@ -65,7 +67,13 @@ if "%env%"=="clean" goto CLEAN
     goto EOF
 
 :CLEAN
+    python setup.py clean --all
     docker system prune -f
+    goto EOF
+
+:BUILD
+    python setup.py sdist
+    python setup.py clean --all
     goto EOF
 
 :EOF

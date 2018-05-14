@@ -1,5 +1,6 @@
 # Ignore Project files
 ## Python
+dist/
 __pycache__/
 .pytest_cache/
 *.py[cod]

@@ -8,17 +8,14 @@ from regress.core import util
 
 @pytest.mark.core
 class CustomTestCase(unittest.TestCase):
-    def test_get_caller(self):
-        """呼び出し元取得のテスト"""
-        self.assertEqual(util.get_caller(), self, "型指定がない場合も呼び出し元が一致すること")
-        self.assertEqual(util.get_caller(unittest.TestCase), self, "型指定された場合に呼び出し元が一致すること")
-        self.assertNotEqual(util.get_caller(str), self, "型が異なる場合は呼び出し元が一致しないこと")
-
     def test_drivers_dir(self):
         """ドライバディレクトリパスのテスト"""
-        from os.path import dirname, abspath, join
+        from os.path import dirname, abspath, join, normcase
         expect = join(dirname(dirname(dirname(abspath(__file__)))), 'drivers')
-        self.assertEqual(util.drivers_dir(), expect, "ドライバディレクトリは /src/drivers であること")
+        # ドライブ名が大文字になることがあるので小文字に変換
+        actual = normcase(util.drivers_dir())
+        expect = normcase(expect)
+        self.assertEqual(actual, expect, "ドライバディレクトリは /src/drivers であること")
 
     @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
     def test_to_exe_win(self):

@@ -1,23 +1,7 @@
 import os
 from pathlib import Path
 
-__all__ = ('get_caller', 'is_win', 'drivers_dir', 'to_exe', 'driver_path',)
-
-
-def get_caller(types=None):
-    """
-    呼び出し元のインスタンスを返します
-    :param types: 対象インスタンスタイプ
-    :return: 呼び出し元インスタンス
-    """
-    import inspect
-    callers = [x.frame.f_locals.get('self') for x in inspect.stack() if 'self' in x.frame.f_locals]
-    if types:
-        callers = [x for x in callers if isinstance(x, types)]
-    if len(callers) > 0:
-        return callers[0]
-    else:
-        return None
+__all__ = ('is_win', 'drivers_dir', 'to_exe', 'driver_path',)
 
 
 def is_win() -> bool:

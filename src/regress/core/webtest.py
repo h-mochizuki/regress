@@ -7,9 +7,23 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
-from . import util
+__all__ = ('get_caller', 'wait_for_page_load', 'get', 'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
 
-__all__ = ('wait_for_page_load', 'get', 'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
+
+def get_caller(types=None):
+    """
+    呼び出し元のインスタンスを返します
+    :param types: 対象インスタンスタイプ
+    :return: 呼び出し元インスタンス
+    """
+    import inspect
+    callers = [x.frame.f_locals.get('self') for x in inspect.stack() if 'self' in x.frame.f_locals]
+    if types:
+        callers = [x for x in callers if isinstance(x, types)]
+    if len(callers) > 0:
+        return callers[0]
+    else:
+        return None
 
 
 @contextmanager
@@ -26,7 +40,7 @@ def wait_for_page_load(
     :param timeout: タイムアウト秒数
     :param method: 待機終了条件
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     yield driver
     # Ajax対応
     driver_wait_seconds = self.wait_seconds if self and hasattr(self, 'wait_seconds') else 0
@@ -41,7 +55,7 @@ def wait(method, message: str = '', *, timeout: float = 30.0) -> None:
     :param message:
     :param timeout: タイムアウト秒数
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         WebDriverWait(
             self.driver,
@@ -58,7 +72,7 @@ def get(url: str, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDrive
     :param timeout: タイムアウト秒数
     :return: WebDriverインスタンス
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     if not self.driver and self.create_driver:
         self.driver = self.create_driver()
 
@@ -72,7 +86,7 @@ def close() -> None:
     """
     WebDriverを閉じます
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         self.driver.quit()
 
@@ -83,7 +97,7 @@ def q(css_selector: str) -> WebElement:
     :param css_selector: cssセレクタ
     :return: 対応する要素
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         return self.driver.find_element_by_css_selector(css_selector)
 
@@ -94,7 +108,7 @@ def qs(css_selector: str) -> List[WebElement]:
     :param css_selector: cssセレクタ
     :return: 対応する要素一覧
     """
-    self = util.get_caller(TestCase)
+    self = get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         return self.driver.find_elements_by_css_selector(css_selector)
 
@@ -139,7 +153,7 @@ def _and_wait(self, name: str):
     if name.endswith('_and_wait'):
         name = name[0:-9]
         if len(name) > 0 and hasattr(self, name):
-            case = util.get_caller(TestCase)
+            case = get_caller(TestCase)
             func = getattr(self, name)
 
             def _wrapper(*args, **kwargs):
