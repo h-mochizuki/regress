@@ -8,7 +8,7 @@ rem =============================================
 set project_home=%~dp0
 set bat_name=%~nx0
 set env=%1
-set name=mkac_regression
+set name=regress
 set tag=0.1
 
 if "%2"=="" (
@@ -30,13 +30,14 @@ if "%env%"=="build" goto BUILD
     echo "$ %bat_name% <option>"
     echo "----"
     echo "option:"
-    echo "    update:     Update dependencies."
-    echo "    lock:       Lock dependencies."
-    echo "    test:       Run tests on docker container."
-    echo "    local:      Run tests on local."
-    echo "    hub:        Start docker selenium-hub."
-    echo "    clean:      Clean docker container and images."
-    echo "    build:      Build project."
+    echo "    update: Update dependencies."
+    echo "    lock:   Lock dependencies."
+    echo "    test:   Run tests on docker container."
+    echo "    local:  Run tests on local."
+    echo "            option: 1) Run tests marked."
+    echo "    hub:    Start docker selenium-hub."
+    echo "    clean:  Clean docker container and images."
+    echo "    build:  Build project."
     goto EOF
 
 :UPDATE
