@@ -17,13 +17,24 @@ def get_caller(types=None):
     :return: 呼び出し元インスタンス
     """
     import inspect
-    callers = [x.frame.f_locals.get('self') for x in inspect.stack() if 'self' in x.frame.f_locals]
-    if types:
-        callers = [x for x in callers if isinstance(x, types)]
-    if len(callers) > 0:
-        return callers[0]
-    else:
-        return None
+    frame_info = [x for x in inspect.stack()
+                  if getattr(x, 'function') == 'get_caller' and getattr(x, 'filename') == __file__]
+    if frame_info:
+        frame = frame_info[0].frame.f_back
+        while frame:
+            args = inspect.getargvalues(frame).args
+            if args:
+                arg = frame.f_locals.get(args[0])
+                if types is None:
+                    # typesがなくて'self'が第一引数の場合は、それを返す
+                    if args[0] == 'self':
+                        return arg
+                elif isinstance(arg, types):
+                    return arg
+                elif isinstance(arg, type) and issubclass(arg, types):
+                    return arg
+            frame = frame.f_back
+    return None
 
 
 @contextmanager
