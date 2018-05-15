@@ -1,5 +1,5 @@
 import unittest
-from regress.core.webtest import get_caller, get, q, TestCase
+from regress.webtest import get_caller, get, q, TestCase
 from regress.drivers import phantom
 
 
