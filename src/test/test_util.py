@@ -22,9 +22,12 @@ class CustomTestCase(unittest.TestCase):
         exe_path = join(dir_path, "test.exe")
         no_suffix_path = join(dir_path, "test.exe")
         text_path = join(dir_path, "test.txt")
-        self.assertEqual(drivers._to_exe(exe_path), exe_path, "EXEファイルの場合はそのまま")
-        self.assertEqual(drivers._to_exe(no_suffix_path), exe_path, "拡張子なしの場合はWindowsならEXEファイルにする")
-        self.assertEqual(drivers._to_exe(text_path), exe_path, "拡張子があってもWindowsならEXEファイルにする")
+        self.assertEqual(drivers._to_exe(exe_path),
+                         exe_path, "EXEファイルの場合はそのまま")
+        self.assertEqual(drivers._to_exe(no_suffix_path), exe_path,
+                         "拡張子なしの場合はWindowsならEXEファイルにする")
+        self.assertEqual(drivers._to_exe(text_path), exe_path,
+                         "拡張子があってもWindowsならEXEファイルにする")
 
     @unittest.skipUnless(not sys.platform.startswith("win"), "not Windows")
     def test_to_exe_not_win(self):
@@ -34,11 +37,15 @@ class CustomTestCase(unittest.TestCase):
         exe_path = join(dir_path, "test.exe")
         no_suffix_path = join(dir_path, "test.exe")
         text_path = join(dir_path, "test.txt")
-        self.assertEqual(drivers._to_exe(exe_path), exe_path, "EXEファイルの場合はそのまま")
-        self.assertEqual(drivers._to_exe(no_suffix_path), no_suffix_path, "拡張子なしの場合はWindowsならそのまま")
-        self.assertEqual(drivers._to_exe(text_path), text_path, "拡張子があってもWindowsならEXEファイルにする")
+        self.assertEqual(drivers._to_exe(exe_path),
+                         exe_path, "EXEファイルの場合はそのまま")
+        self.assertEqual(drivers._to_exe(no_suffix_path), no_suffix_path,
+                         "拡張子なしの場合はWindowsならそのまま")
+        self.assertEqual(drivers._to_exe(text_path), text_path,
+                         "拡張子があってもWindowsならEXEファイルにする")
 
     def test_is_win(self):
         """実行しているシステムのテスト"""
         import sys
-        self.assertEqual(drivers._is_win(), 'win' in sys.platform, "Windows上で実行していれば True となること")
+        self.assertEqual(drivers._is_win(), 'win' in sys.platform,
+                         "Windows上で実行していれば True となること")

@@ -7,7 +7,8 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
-__all__ = ('get_caller', 'wait_for_page_load', 'get', 'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
+__all__ = ('get_caller', 'wait_for_page_load', 'get',
+           'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
 
 
 def get_caller(types=None):
@@ -54,7 +55,8 @@ def wait_for_page_load(
     self = get_caller(TestCase)
     yield driver
     # Ajax対応
-    driver_wait_seconds = self.wait_seconds if self and hasattr(self, 'wait_seconds') else 0
+    driver_wait_seconds = self.wait_seconds if self and hasattr(
+        self, 'wait_seconds') else 0
     sleep(wait_seconds if wait_seconds else driver_wait_seconds)
     wait(method, timeout=timeout)
 
@@ -172,7 +174,8 @@ def _and_wait(self, name: str):
                     return func(*args, **kwargs)
 
             return _wrapper
-    raise AttributeError("{} object has no attribute {}".format(self.__class__, name))
+    raise AttributeError(
+        "{} object has no attribute {}".format(self.__class__, name))
 
 
 def _set_text(self: WebElement, name: str, value):
