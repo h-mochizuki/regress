@@ -32,6 +32,7 @@ venv/
 
 ## for Visual Studio Code
 .vscode
+*.code-workspace
 
 ## for ctags
 .tags*
