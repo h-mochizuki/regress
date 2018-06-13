@@ -1,0 +1,32 @@
+# Ignore Project files
+## Python
+dist/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info
+
+## VirtualEnv
+venv/
+
+## log
+*.log
+
+# Ignore IDE files
+## for Eclipse
+.buildpath
+.project
+.settings
+.pydevproject
+
+## for Intellij IDEA/RubyMine/PyCharm
+*.iml
+.idea
+.cache
+
+## for Visual Studio Code
+.vscode
+*.code-workspace
+
+## for ctags
+.tags*
