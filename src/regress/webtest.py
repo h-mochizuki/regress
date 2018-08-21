@@ -5,10 +5,12 @@ from typing import List
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 
 __all__ = ('get_caller', 'wait_for_page_load', 'get',
-           'close', 'q', 'qs', 'sleep', 'every_sleep', 'TestCase')
+           'close', 'close_alert', 'q', 'qs', 'link', 'x_text', 'sleep', 'every_sleep', 'TestCase')
+
+_TMPL_XPATH_CONTAINS = "//*[contains(text(), '{}')]"
 
 
 def get_caller(types=None):
@@ -77,7 +79,7 @@ def wait(method, message: str = '', *, timeout: float = 30.0) -> None:
         ).until(method, message)
 
 
-def get(url: str, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDriver:
+def get(url: str = None, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDriver:
     """
     呼び出し元のWebDriverを使用して対象URLを開きます
     :param url: 対象URL
@@ -91,8 +93,27 @@ def get(url: str, *, wait_seconds: float = 1, timeout: float = 30.0) -> WebDrive
 
     if self.driver and isinstance(self.driver, WebDriver):
         with wait_for_page_load(self.driver, wait_seconds=wait_seconds, timeout=timeout):
-            self.driver.get(url)
+            self.driver.get(url or self.base_url)
     return self.driver
+
+
+def close_alert() -> str:
+    """
+    アラートを閉じてメッセージを返します
+    :return: アラートメッセージ
+    """
+    self = get_caller(TestCase)
+    if self.driver and isinstance(self.driver, WebDriver):
+        try:
+            alert = self.driver.switch_to.alert
+            alert_text = alert.text
+            if self.accept_next_alert:
+                alert.accept()
+            else:
+                alert.dismiss()
+            return alert_text
+        finally:
+            self.accept_next_alert = True
 
 
 def close() -> None:
@@ -124,6 +145,17 @@ def qs(css_selector: str) -> List[WebElement]:
     self = get_caller(TestCase)
     if self.driver and isinstance(self.driver, WebDriver):
         return self.driver.find_elements_by_css_selector(css_selector)
+
+
+def x_text(text: str) -> List[WebElement]:
+    """
+    呼び出し元のWebDriverを使用して要素を検索します
+    :param 含まれるテキスト
+    :return: 対応する要素一覧
+    """
+    self = get_caller(TestCase)
+    if self.driver and isinstance(self.driver, WebDriver):
+        return self.driver.find_element_by_xpath(_TMPL_XPATH_CONTAINS.format(text))
 
 
 def sleep(seconds: float):
@@ -186,8 +218,15 @@ def _set_text(self: WebElement, name: str, value):
     :param value: 設定する値
     """
     if name == 'text':
-        self.clear()
-        self.send_keys(value)
+        if 'datetime' not in self.get_attribute('type'):
+            self.clear()
+            self.send_keys(value)
+        else:
+            caller = get_caller(TestCase)
+            if caller.driver and isinstance(caller.driver, WebDriver):
+                caller.driver.execute_script("arguments[0].value = '{}';".format(value), self)
+            else:
+                self.send_keys(value)
     else:
         super(WebElement, self).__setattr__(name, value)
 
@@ -195,51 +234,62 @@ def _set_text(self: WebElement, name: str, value):
 WebDriver.__getattr__ = _and_wait
 WebElement.__getattr__ = _and_wait
 WebElement.__setattr__ = _set_text
+
 WebDriver.hostname = property(_get_hostname)
 WebDriver.q = WebDriver.find_element_by_css_selector
+WebDriver.css = WebDriver.find_element_by_css_selector
 WebDriver.qs = WebDriver.find_elements_by_css_selector
+WebDriver.link = WebDriver.find_elements_by_link_text
+WebDriver.x_text = (lambda self, t: self.find_element_by_xpath(_TMPL_XPATH_CONTAINS.format(t)))
+WebDriver.select = property(lambda self: Select(self))
+WebDriver.select_by_value = (lambda self, v: Select(self).select_by_value(v))
+WebDriver.select_by_visible_text = (lambda self, t: Select(self).select_by_visible_text(t))
+
 WebElement.q = WebElement.find_element_by_css_selector
+WebElement.css = WebElement.find_element_by_css_selector
 WebElement.qs = WebElement.find_elements_by_css_selector
+WebElement.link = WebElement.find_elements_by_link_text
+WebElement.x_text = (lambda self, t: self.find_element_by_xpath(_TMPL_XPATH_CONTAINS.format(t)))
+WebElement.select = property(lambda self: Select(self))
+WebElement.select_by_value = (lambda self, v: Select(self).select_by_value(v))
+WebElement.select_by_visible_text = (lambda self, t: Select(self).select_by_visible_text(t))
 
 
 class TestCase(unittest.TestCase):
     """
     WebDriverによるテストの基底クラス
     """
-    # WebDriverインスタンス
-    driver: WebDriver
     # WebDriverを作成するメソッド
     create_driver: callable
+    # WebDriverインスタンス(複数のテストで使いまわせないので作成は create_driverから行ってください)
+    driver: WebDriver
     # 待機秒数(画面切り替えが間に合わない場合に指定)
     wait_seconds: float = 0
+    # アラートを許可するかのフラグ
+    accept_next_alert: bool = True
+    # ベースURL
+    base_url: str = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if not hasattr(self, 'create_driver') and not hasattr(self, 'driver'):
-            raise NotImplementedError(
-                "Subclasses of BaseTestCase must provide create_driver or driver property."
-            )
-
         if hasattr(self, 'driver') and self.driver:
-            self._override_driver_quit(self.driver)
-        else:
-            self.driver = None
-
-        if hasattr(self, 'create_driver') and self.create_driver:
-            _create_driver = self.create_driver
-
-            def _wrapper():
-                _driver = _create_driver()
-                self._override_driver_quit(_driver)
-                return _driver
-
-            setattr(self, 'create_driver', _wrapper)
-        else:
-            self.create_driver = None
-
+            self.driver.close()
+            raise ValueError("Can not specify driver as argument.")
+        if not hasattr(self, 'create_driver') or not self.create_driver:
+            raise NotImplementedError(
+                "Subclasses of BaseTestCase must provide create_driver property."
+            )
         if hasattr(self, 'tearDown'):
             self._override_tear_down()
+        self.driver = None
+        _origin = self.create_driver
+
+        def _wrapper():
+            _driver = _origin()
+            self._override_driver_quit(_driver)
+            return _driver
+
+        setattr(self, 'create_driver', _wrapper)
 
     def _override_driver_quit(self, driver: WebDriver) -> None:
         """
@@ -250,7 +300,11 @@ class TestCase(unittest.TestCase):
         if _origin:
             def _wrapper():
                 _origin()
-                self.driver = None
+                if hasattr(self, 'original_driver'):
+                    import copy
+                    self.driver = copy.copy(self.original_driver)
+                else:
+                    self.driver = None
 
             setattr(driver, 'quit', _wrapper)
 

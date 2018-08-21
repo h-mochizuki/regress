@@ -17,9 +17,14 @@ def remote(command_executor=None, capabilities=None):
 
 def phantom():
     try:
-        _driver = webdriver.PhantomJS()
+        _driver = webdriver.PhantomJS(
+            service_args=['--ignore-ssl-errors=true'],
+        )
     except (FileNotFoundError, WebDriverException):
-        _driver = webdriver.PhantomJS(executable_path=_driver_path('phantomjs'))
+        _driver = webdriver.PhantomJS(
+            executable_path=_driver_path('phantomjs'),
+            service_args=['--ignore-ssl-errors=true'],
+        )
     # 仮の画面サイズを指定
     _driver.set_window_size(1280, 1024)
     return _driver
