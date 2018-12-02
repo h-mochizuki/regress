@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 __all__ = ('get_caller', 'wait_for_page_load', 'get',
-           'close', 'close_alert', 'q', 'qs', 'link', 'x_text', 'sleep', 'every_sleep', 'TestCase')
+           'close', 'close_alert', 'q', 'qs', 'x_text', 'sleep', 'every_sleep', 'TestCase')
 
 _TMPL_XPATH_CONTAINS = "//*[contains(text(), '{}')]"
 

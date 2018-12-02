@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 RUN apt-get update \
     && apt-get -y install fontconfig \
     && apt-get -y clean
-COPY requirements.txt requirements_dev.txt requirements.lock ./
+COPY requirements.txt requirements_dev.txt requirements.loc[k] ./
 ARG UPDATE_LOCK
 RUN if [ -z "$UPDATE_LOCK" ]; then pip install --no-cache-dir -r requirements.lock; fi
 RUN pip install --no-cache-dir -r requirements.txt
